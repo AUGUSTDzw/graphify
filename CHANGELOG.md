@@ -2,6 +2,10 @@
 
 Full release notes with details on each version: [GitHub Releases](https://github.com/Graphify-Labs/graphify/releases)
 
+## 0.9.96 (unreleased)
+
+- Security: **deps** the Pillow floor is raised to `>=13.0.0` on Python 3.11+ (staying at `>=12.3.0` on 3.10, which Pillow 13 no longer supports) and pypdf to `>=6.19.0`, and the lockfile is refreshed to patched versions of transitive dependencies (pyjwt, cryptography, certifi, urllib3, anyio, fsspec, soupsieve, virtualenv). This clears the bulk of the open Dependabot advisories; the Pillow image-parsing CVEs are only patched upstream for Python 3.11+, so a 3.10 install keeps the newest 3.10-compatible Pillow.
+
 ## 0.9.95 (2026-10-23)
 
 Twenty-one community pull requests. A security pass on install: the skill-install writes go through randomly-named temp files instead of predictable ones, so a pre-planted symlink can no longer redirect a write. Extraction: Python, Go, C++ and Rust explicit type aliases (and Rust `union` items) are extracted as type nodes so references resolve instead of minting sourceless stubs, each C# method overload gets its own node bound by argument count, and a package.json dependency's manifest entry links to the node that references it. Plus a one-root-per-repo tree on merged graphs, extended-length cache paths on Windows, and binary media no longer counted as text. The AST cache schema is bumped, so the first build after upgrading re-extracts.
