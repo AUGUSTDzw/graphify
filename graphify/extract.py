@@ -5306,7 +5306,9 @@ def _resolve_python_member_calls(
             continue
         cls = next(iter(classes))
         if cls in class_ids:
-            _emit_call(rc["caller_nid"], method_index.get((cls, _key(rc["callee"]))), rc, inferred=True)
+            # method_index is list-valued since #4734; resolve the exact-spelled
+            # method via _method_of rather than passing the raw candidate list.
+            _emit_call(rc["caller_nid"], _method_of(cls, rc["callee"]), rc, inferred=True)
 
 
 # Every suffix the TS/JS extractors claim, so a pure-ESM (`.mjs`) repo still activates

@@ -208,13 +208,15 @@ def test_inputs_unchanged_rejects_an_empty_manifest(tmp_path: Path) -> None:
     assert _inputs_unchanged(detected, root / "graphify-out" / "manifest.json", root) is False
 
 
-def test_inputs_unchanged_tolerates_a_scanned_file_with_no_manifest_row(
+def test_inputs_unchanged_treats_a_scanned_file_with_no_manifest_row_as_changed(
     built: Path,
 ) -> None:
-    # A source whose AST extraction permanently fails is deliberately never
-    # stamped (#2543), so a row-based comparison alone would report it changed on
-    # every run and the gate could never fire. The observable state of such a
-    # file is exactly "in the scan, absent from the manifest".
+    # A scanned source with no manifest row (e.g. one whose AST extraction
+    # previously failed, #2543) must NOT fast-path the gate: if it is later fixed
+    # with no other change in the tree, the gate has to take the full rebuild so
+    # the graph gains its nodes. Tolerating the missing row would skip forever and
+    # leave the graph stale. The cost is that a corpus with a permanently-failing
+    # file never fast-paths, which is the safe direction.
     from graphify.detect import detect, load_manifest
     from graphify.watch import _inputs_unchanged
 
@@ -226,7 +228,7 @@ def test_inputs_unchanged_tolerates_a_scanned_file_with_no_manifest_row(
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     detected = detect(built)
-    assert _inputs_unchanged(detected, manifest_path, built) is True
+    assert _inputs_unchanged(detected, manifest_path, built) is False
 
 
 def test_scan_digest_tracks_the_file_set_not_the_contents(built: Path) -> None:

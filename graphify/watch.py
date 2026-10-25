@@ -1637,8 +1637,13 @@ def _inputs_unchanged(detected: dict, manifest_path: Path, root: Path) -> bool:
     ]
     keyed = {_abs(k): v for k, v in manifest.items()}
 
+    # unstamped_is_changed=True: a scanned file with no manifest row or a blanked
+    # ast_hash (e.g. one that previously FAILED extraction, #2543) counts as
+    # changed, so fixing it later takes the full rebuild instead of being skipped
+    # forever. The only cost is that a corpus with a permanently-failing file never
+    # fast-paths — the safe direction (a false "changed" only costs time).
     changed, _unchanged = classify_manifest_files(
-        buckets, keyed, kind="ast", unstamped_is_changed=False
+        buckets, keyed, kind="ast", unstamped_is_changed=True
     )
     if any(changed.values()):
         return False
