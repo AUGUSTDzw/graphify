@@ -5,6 +5,15 @@ Full release notes with details on each version: [GitHub Releases](https://githu
 ## 0.9.96 (unreleased)
 
 - Security: **deps** the Pillow floor is raised to `>=13.0.0` on Python 3.11+ (staying at `>=12.3.0` on 3.10, which Pillow 13 no longer supports) and pypdf to `>=6.19.0`, and the lockfile is refreshed to patched versions of transitive dependencies (pyjwt, cryptography, certifi, urllib3, anyio, fsspec, soupsieve, virtualenv). This clears the bulk of the open Dependabot advisories; the Pillow image-parsing CVEs are only patched upstream for Python 3.11+, so a 3.10 install keeps the newest 3.10-compatible Pillow.
+- Fix: **llm** a chunk that failed before returning a response no longer has its files reported as model omissions; the warning distinguishes a failed chunk from a genuine omission, and both are still re-dispatched (#3616, #4752, thanks @jaimemartinez; reported by @GREYGROUPJP).
+- Fix: **watch** a Markdown file that `detect()` classifies as a paper (arXiv markers, an Abstract) is included in the watch quick-scan rebuild instead of contributing zero nodes; a paper that already has a semantic layer is still excluded from the AST quick-scan (#4750, #4751, thanks @jaimemartinez; reported by @yeochul-jeon).
+- Fix: **prs** every unfinished CheckRun status (`WAITING`, `REQUESTED`, `PENDING`, ...) counts as pending CI, so a PR gated on a deployment-protection job is no longer read as ready (#4730, thanks @rudycelekli).
+- Fix: **export** an Obsidian note lists every parallel relation between two nodes (for example both `imports` and `calls`) instead of only the first edge (#4731, thanks @rudycelekli).
+- Fix: **build** a hyperedge whose members are given under the `members`/`node_ids` aliases has its numeric member ids coerced to strings like the canonical `nodes` list, so the hyperedge is no longer dropped (#4732, thanks @rudycelekli).
+- Fix: **llm** a code node whose confidence is written in a different case (`extracted`/`Extracted`) is still evidence-checked before it folds to the `EXTRACTED` enum, so an un-verified node is not presented as solid (#4733, thanks @rudycelekli).
+- Fix: **python** a member call binds to the method it actually spells rather than a case/underscore-folded twin (`run()` no longer resolves to `_run()`); a lone folded method still resolves, and a genuine collision fails closed (#4734, thanks @rudycelekli).
+- Fix: **zig** a call no longer crosses between a method and a same-named free function; a bare call binds the free function and a receiver call binds the method (#4755, thanks @ayushcodes10).
+- Fix: **dart** an unnamed `extension on T { }` declaration is detected and extracted (the name is optional), so its members attach to the extended type (#4741, thanks @ayushcodes10).
 
 ## 0.9.95 (2026-10-23)
 
