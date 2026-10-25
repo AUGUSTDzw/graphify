@@ -2,7 +2,7 @@
 
 Full release notes with details on each version: [GitHub Releases](https://github.com/Graphify-Labs/graphify/releases)
 
-## 0.9.96 (unreleased)
+## 0.9.96 (2026-10-25)
 
 - Security: **deps** the Pillow floor is raised to `>=13.0.0` on Python 3.11+ (staying at `>=12.3.0` on 3.10, which Pillow 13 no longer supports) and pypdf to `>=6.19.0`, and the lockfile is refreshed to patched versions of transitive dependencies (pyjwt, cryptography, certifi, urllib3, anyio, fsspec, soupsieve, virtualenv). This clears the bulk of the open Dependabot advisories; the Pillow image-parsing CVEs are only patched upstream for Python 3.11+, so a 3.10 install keeps the newest 3.10-compatible Pillow.
 - Fix: **llm** a chunk that failed before returning a response no longer has its files reported as model omissions; the warning distinguishes a failed chunk from a genuine omission, and both are still re-dispatched (#3616, #4752, thanks @jaimemartinez; reported by @GREYGROUPJP).
