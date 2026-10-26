@@ -3078,7 +3078,14 @@ def _rebuild_timeout():
     if timeout <= 0:
         yield
         return
-    if hasattr(signal, "SIGALRM"):
+    # SIGALRM can only be armed from the main thread: signal.signal() raises
+    # ValueError ("signal only works in main thread") anywhere else. watch()'s
+    # dispatch loop is not always the main thread (it is run in a worker thread
+    # both under test and when embedded), and that ValueError would escape the
+    # `except TimeoutError` guard and tear the watch loop down before the
+    # rebuild runs (#4724 regressed gh-928). Off the main thread, fall back to
+    # the signal-free Timer path, which bounds the rebuild just the same.
+    if hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread():
         def _sigalrm_bail(*_a):
             # Kill workers before raising: TimeoutError would otherwise block in
             # the pool's shutdown(wait=True) on a worker the alarm cannot stop.

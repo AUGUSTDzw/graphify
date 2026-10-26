@@ -2139,3 +2139,32 @@ def test_watch_rebuild_timeout_arms_a_timer_without_sigalrm():
     assert kill_at < exit_at, "_bail exits before killing workers"
     loop = ast.dump(_watch_fn("watch"))
     assert "_rebuild_timeout" in loop, "watch() does not wrap its rebuild in _rebuild_timeout (#2173)"
+
+
+def test_watch_rebuild_timeout_runs_off_the_main_thread():
+    """SIGALRM can only be armed from the main thread: signal.signal() raises
+    ValueError anywhere else. watch()'s dispatch loop runs in a worker thread
+    both under test and when embedded, so _rebuild_timeout must not reach for
+    SIGALRM there — otherwise the ValueError escapes the loop's
+    `except TimeoutError` guard and tears watch() down before the rebuild runs
+    (#4724 regressed gh-928). The context manager must yield (run its body)
+    cleanly off the main thread."""
+    import threading
+    import graphify.watch as watch_mod
+
+    ran: list[bool] = []
+    errors: list[BaseException] = []
+
+    def _body():
+        try:
+            with watch_mod._rebuild_timeout():
+                ran.append(True)
+        except BaseException as exc:  # noqa: BLE001 - record any escape
+            errors.append(exc)
+
+    t = threading.Thread(target=_body)
+    t.start()
+    t.join(timeout=10)
+    assert not t.is_alive(), "_rebuild_timeout blocked the worker thread"
+    assert errors == [], f"_rebuild_timeout raised off the main thread: {errors!r}"
+    assert ran == [True], "_rebuild_timeout never ran its body off the main thread"
