@@ -68,6 +68,28 @@ def test_case_only_relabel_leaves_no_dangling_link(tmp_path):
     assert missing == [], missing
 
 
+def test_case_only_relabel_keeps_the_new_content_not_the_stale_twin(tmp_path):
+    """The surviving article must carry the NEW label's body, not the stale one.
+
+    On a case-sensitive filesystem (ext4, most Linux CI) the relabel writes the
+    correct `# Groups` article to a distinct `Groups.md`, while `groups.md` lingers
+    with the old `# groups` heading. Renaming the stale twin over the fresh file
+    (instead of unlinking it) silently restores the old body: no missing file, no
+    dangling link, just wrong content. The other tests pass on both filesystems
+    even with that bug, so this content check is the one that catches it on
+    case-sensitive hosts.
+    """
+    g = _graph()
+    to_wiki(g, {0: ["a", "b"]}, tmp_path, community_labels={0: "groups"})
+    to_wiki(g, {0: ["a", "b"]}, tmp_path, community_labels={0: "Groups"})
+
+    articles = [p for p in tmp_path.glob("*.md") if p.name != "index.md"]
+    assert len(articles) == 1, [p.name for p in articles]
+    body = articles[0].read_text(encoding="utf-8")
+    assert "# Groups" in body, body
+    assert "# groups" not in body, body
+
+
 def test_a_genuinely_absent_article_is_still_swept(tmp_path):
     """The folded comparison must not keep unrelated stale articles alive."""
     g = _graph()

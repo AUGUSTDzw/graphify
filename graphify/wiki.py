@@ -462,12 +462,20 @@ def to_wiki(
         if wanted is None:
             old_article.unlink()
         elif old_article.name != wanted:
-            # Case-only relabel: move the entry so the new case reaches disk and
-            # the link in index.md resolves. A two-step rename through a temporary
-            # name is required because a case-insensitive filesystem considers
-            # source and destination the same file.
-            temp = out / f".{wanted}.case-tmp"
-            old_article.rename(temp)
-            temp.rename(out / wanted)
+            # Case-only relabel. On a case-SENSITIVE filesystem (ext4, most Linux
+            # CI and production hosts) this run already wrote the correct content
+            # to `out / wanted` as a DISTINCT file, so the lower-case `old_article`
+            # is just a stale twin: unlink it, never rename it over the fresh file
+            # (doing so would silently restore the stale body). Only on a
+            # case-INSENSITIVE filesystem (APFS, NTFS) are the two the same inode,
+            # where a two-step rename through a temporary name is needed to make
+            # the new case reach disk so the index.md link resolves.
+            target = out / wanted
+            if target.exists() and not target.samefile(old_article):
+                old_article.unlink()
+            else:
+                temp = out / f".{wanted}.case-tmp"
+                old_article.rename(temp)
+                temp.rename(target)
 
     return count
