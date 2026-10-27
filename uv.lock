@@ -1625,6 +1625,7 @@ dependencies = [
 [package.optional-dependencies]
 all = [
     { name = "anthropic" },
+    { name = "anyio" },
     { name = "boto3" },
     { name = "falkordb" },
     { name = "faster-whisper", marker = "python_full_version >= '3.11'" },
@@ -1792,6 +1793,7 @@ dev = [
 requires-dist = [
     { name = "anthropic", marker = "extra == 'all'" },
     { name = "anthropic", marker = "extra == 'anthropic'" },
+    { name = "anyio", marker = "extra == 'all'", specifier = ">=4.14.2" },
     { name = "anyio", marker = "extra == 'mcp'", specifier = ">=4.14.2" },
     { name = "boto3", marker = "extra == 'all'" },
     { name = "boto3", marker = "extra == 'bedrock'" },
